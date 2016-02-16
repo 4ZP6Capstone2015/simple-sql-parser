@@ -7,6 +7,11 @@
 >     ,prettyValueExpr
 >     ,prettyStatement
 >     ,prettyStatements
+>     ,prettyQueryExprDoc
+>     ,prettyValueExprDoc
+>     ,prettyStatementDoc
+>     ,prettyStatementsDoc
+>     ,Doc
 >     ) where
 
 TODO: there should be more comments in this file, especially the bits
@@ -14,8 +19,8 @@ which have been changed to try to improve the layout of the output.
 
 > import Language.SQL.SimpleSQL.Syntax
 > import Language.SQL.SimpleSQL.Dialect
-> import Text.PrettyPrint (render, vcat, text, (<>), (<+>), empty, parens,
->                          nest, Doc, punctuate, comma, sep, quotes,
+> import Text.PrettyPrint.Leijen ( vcat, text, (<>), (<+>), empty, parens,
+>                          nest, Doc, punctuate, comma, sep, squotes ,
 >                          brackets,hcat)
 > import Data.Maybe (maybeToList, catMaybes)
 > import Data.List (intercalate)
@@ -24,18 +29,33 @@ which have been changed to try to improve the layout of the output.
 > prettyQueryExpr :: Dialect -> QueryExpr -> String
 > prettyQueryExpr d = render . queryExpr d
 
+> prettyQueryExprDoc :: Dialect -> QueryExpr -> Doc
+> prettyQueryExprDoc = queryExpr
+
 > -- | Convert a value expr ast to concrete syntax.
 > prettyValueExpr :: Dialect -> ValueExpr -> String
 > prettyValueExpr d = render . valueExpr d
+
+> prettyValueExprDoc :: Dialect -> ValueExpr -> Doc
+> prettyValueExprDoc d = valueExpr d
 
 > -- | Convert a statement ast to concrete syntax.
 > prettyStatement :: Dialect -> Statement -> String
 > prettyStatement d = render . statement d
 
+> prettyStatementDoc :: Dialect -> Statement -> Doc
+> prettyStatementDoc d = statement d
+
 > -- | Convert a list of statements to concrete syntax. A semi colon
 > -- is inserted after each statement.
 > prettyStatements :: Dialect -> [Statement] -> String
 > prettyStatements d = render . vcat . map ((<> text ";\n") . statement d)
+
+> prettyStatementsDoc :: Dialect -> [Statement] -> Doc
+> prettyStatementsDoc d = vcat . map ((<> text ";\n") . statement d)
+
+> render = show 
+> render :: Doc -> String 
 
 = value expressions
 
@@ -46,7 +66,7 @@ which have been changed to try to improve the layout of the output.
 > valueExpr _ (IntervalLit s v f t) =
 >     text "interval"
 >     <+> me (\x -> if x then text "+" else text "-") s
->     <+> quotes (text v)
+>     <+> squotes (text v)
 >     <+> intervalTypeField f
 >     <+> me (\x -> text "to" <+> intervalTypeField x) t
 > valueExpr _ (Iden i) = names i
@@ -152,7 +172,7 @@ which have been changed to try to improve the layout of the output.
 >                                ,typeName tn])
 
 > valueExpr _ (TypedLit tn s) =
->     typeName tn <+> quotes (text s)
+>     typeName tn <+> squotes (text s)
 
 > valueExpr d (SubQueryExpr ty qe) =
 >     (case ty of
